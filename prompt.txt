@@ -1,0 +1,154 @@
+You are a senior AI engineer and full-stack Python developer.
+
+Your task is to build a COMPLETE offline web-based FAQ chatbot system.
+
+## 🎯 Objective
+
+Create a local chatbot that can understand user queries in natural language (even if wording differs from FAQs) and return the most relevant answer from a predefined FAQ dataset.
+
+The system must run 100% OFFLINE on localhost.
+
+---
+
+## 🧱 TECH STACK
+
+Backend:
+
+* Python
+* FastAPI (preferred) or Flask
+
+AI/NLP:
+
+* sentence-transformers
+* Model: all-MiniLM-L6-v2
+
+Vector Search:
+
+* FAISS (required)
+
+Frontend:
+
+* HTML + CSS + JavaScript (simple chat UI)
+
+---
+
+## 📁 INPUT DATA
+
+Assume FAQs are provided in a JSON file like:
+
+[
+{
+"question": "What is the admission criteria for NUST?",
+"answer": "Admission is based on NET test and academic record."
+}
+]
+
+---
+
+## ⚙️ FEATURES TO IMPLEMENT
+
+### 1. Data Preprocessing
+
+* Load FAQ JSON
+* Generate embeddings for all questions
+* Store embeddings in FAISS index
+* Save index locally for reuse
+
+---
+
+### 2. Query Processing
+
+* Accept user query from frontend
+* Convert query to embedding
+* Perform similarity search in FAISS
+* Return top 3 closest matches
+
+---
+
+### 3. Smart Filtering
+
+* Apply similarity threshold (e.g. 0.6)
+* If no match passes threshold:
+  return: "Sorry, I couldn't find a relevant answer."
+
+---
+
+### 4. Response System
+
+* Return:
+
+  * best answer
+  * optionally top 3 related FAQs
+
+---
+
+### 5. Web Interface
+
+* Chat UI (like messaging app)
+* Input box + send button
+* Display responses cleanly
+
+---
+
+### 6. Performance
+
+* Cache embeddings
+* Do NOT recompute every time
+
+---
+
+### 7. Offline Requirement
+
+* No external APIs
+* Everything must run locally
+
+---
+
+## 📦 PROJECT STRUCTURE
+
+Provide clean folder structure like:
+
+/app
+main.py
+faq.json
+embed.py
+search.py
+templates/
+static/
+faiss_index/
+
+---
+
+## 🔥 BONUS FEATURES (if possible)
+
+* Add logging of user queries
+* Add option to retrain index
+* Add admin panel to update FAQs
+
+---
+
+## 🧾 OUTPUT FORMAT
+
+Give:
+
+1. Full working code (all files)
+2. Setup instructions
+3. How to run locally
+4. Dependencies (requirements.txt)
+
+---
+
+## ⚠️ IMPORTANT
+
+* Code must be production-quality
+* Keep it simple but scalable
+* Ensure offline compatibility
+
+---
+
+Now generate the COMPLETE working system.
+
+make a run.bat file 
+running that file should execute the program 
+
+

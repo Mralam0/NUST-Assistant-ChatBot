@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUST Admission Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="ambient ambient-one"></div>
+        <div class="ambient ambient-two"></div>
+        <div class="ambient ambient-three"></div>
+
+        <div class="chat-header">
+            <div class="brand-block">
+                <img src="/static/logo.png" alt="NUST logo" class="logo">
+                <div>
+                    <h1>NUST Admission Assistant</h1>
+                    <p>Ask anything about NUST admissions</p>
+                </div>
+            </div>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+                <span class="theme-toggle-track">
+                    <span class="theme-icon theme-icon-sun" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2.5v2.5M12 19v2.5M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2.5 12H5M19 12h2.5M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77"></path>
+                        </svg>
+                    </span>
+                    <span class="theme-icon theme-icon-moon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.2 14.1A8.7 8.7 0 0 1 9.9 3.8a.7.7 0 0 0-.96-.83A10 10 0 1 0 21.03 15a.7.7 0 0 0-.83-.9Z"></path>
+                        </svg>
+                    </span>
+                </span>
+            </button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-msg">
+                <h2>Welcome to NUST Admission Assistant</h2>
+                <p>Ask me anything about NUST admissions, entry tests, fee structure, programmes, and more.</p>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Type your question..." autocomplete="off">
+            <button id="sendBtn" type="button" onclick="sendMessage()" aria-label="Send message" title="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h13"></path>
+                    <path d="m13 5 7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        const storageKey = 'nust-faq-theme';
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+            themeToggle.setAttribute('title', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+        }
+
+        const savedTheme = localStorage.getItem(storageKey);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            localStorage.setItem(storageKey, nextTheme);
+        });
+
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) sendMessage();
+        });
+
+        function addMessage(content, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = content;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+            return div;
+        }
+
+        function toggleRelatedAnswer(element) {
+            element.classList.toggle('open');
+        }
+
+        function showTyping() {
+            const div = document.createElement('div');
+            div.className = 'message bot';
+            div.id = 'typingMsg';
+            div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+        }
+
+        function removeTyping() {
+            const el = document.getElementById('typingMsg');
+            if (el) el.remove();
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            const welcome = document.querySelector('.welcome-msg');
+            if (welcome) welcome.remove();
+
+            addMessage(query, 'user');
+            userInput.value = '';
+            sendBtn.disabled = true;
+            showTyping();
+
+            try {
+                const res = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const data = await res.json();
+                removeTyping();
+
+                let html = '';
+                if (data.matched_question) {
+                    html += `<div class="matched-q">Best match: ${data.matched_question}</div>`;
+                }
+                html += `<div class="answer-copy">${data.answer}</div>`;
+                if (data.confidence) {
+                    html += `<div class="confidence">Confidence: ${(data.confidence * 100).toFixed(1)}%</div>`;
+                }
+
+                if (data.related && data.related.length > 0) {
+                    html += '<div class="related-section"><h4>Related Questions</h4><div class="related-list">';
+                    data.related.forEach((r) => {
+                        html += `<div class="related-item" onclick="toggleRelatedAnswer(this)">
+                            <div class="rq">${r.question}</div>
+                            <div class="related-meta">Tap to expand</div>
+                            <div class="ra">${r.answer}</div>
+                        </div>`;
+                    });
+                    html += '</div></div>';
+                }
+
+                addMessage(html, 'bot');
+            } catch (err) {
+                removeTyping();
+                addMessage('Something went wrong. Please try again.', 'bot');
+            }
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+    </script>
+</body>
+</html>
